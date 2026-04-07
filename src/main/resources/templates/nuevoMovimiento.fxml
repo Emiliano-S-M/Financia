@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="410.0" prefWidth="360.0" styleClass="gray-background" stylesheets="@../styles/ColorsPalette.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="CanalDev.Financia.Controlador.nuevoMovimientoController">
+   <padding>
+      <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+   </padding>
+   <children>
+      <VBox alignment="TOP_CENTER" layoutX="30.0" layoutY="14.0" styleClass="gray-background" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Label styleClass="gray-text" text="Tipo">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <ComboBox fx:id="tipoCombo" prefWidth="200.0" />
+            <Region prefHeight="20.0" />
+            <Label styleClass="gray-text" text="Monto">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <TextField fx:id="montoTexto" maxWidth="200.0" prefWidth="200.0" />
+            <Region prefHeight="20.0" />
+            <Label styleClass="gray-text" text="Categoria">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <ComboBox fx:id="categoriaCombo" prefWidth="200.0" />
+            <Region prefHeight="20.0" />
+            <Label styleClass="gray-text" text="Fecha">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Label>
+            <DatePicker fx:id="fechaDate" prefHeight="26.0" prefWidth="200.0" />
+            <Region prefHeight="20.0" />
+            <Button fx:id="botonGuardar" mnemonicParsing="false" onAction="#guardarMovimiento" prefWidth="150.0" text="Guardar">
+               <styleClass>
+                  <String fx:value="green-background" />
+                  <String fx:value="white-text" />
+               </styleClass>
+            </Button>
+            <Region prefHeight="20.0" />
+            <Button fx:id="botonCancelar" mnemonicParsing="false" onAction="#cancelarMovimiento" prefWidth="150.0" text="Cancelar">
+               <styleClass>
+                  <String fx:value="red-background" />
+                  <String fx:value="white-text" />
+               </styleClass>
+            </Button>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

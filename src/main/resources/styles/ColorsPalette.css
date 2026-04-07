@@ -1,0 +1,43 @@
+.green-background {
+    -fx-background-color: #22C55E;
+}
+
+.red-background {
+    -fx-background-color: #EF4444;
+}
+
+.light-gray-background {
+    -fx-background-color: #F9FAFB;
+}
+
+.white-background {
+    -fx-background-color: #FFFFFF;
+}
+
+.dark-background {
+    -fx-text-fill: #111827;
+}
+
+.gray-background {
+    -fx-text-fill: #6B7280;
+}
+
+.dark-text {
+    -fx-text-fill: #111827;
+}
+
+.gray-text {
+    -fx-text-fill: #6B7280;
+}
+
+.green-text {
+    -fx-text-fill: #22C55E;
+}
+
+.red-text {
+    -fx-text-fill: #EF4444;
+}
+
+.white-text {
+    -fx-text-fill: #FFFFFF;
+}
