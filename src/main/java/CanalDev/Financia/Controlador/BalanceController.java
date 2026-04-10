@@ -4,6 +4,8 @@ package CanalDev.Financia.Controlador;
 import CanalDev.Financia.Modelo.MovimientoModelo;
 import CanalDev.Financia.Presentacion.FinanciaFx;
 import CanalDev.Financia.Servicio.MovimientoServicio;
+import CanalDev.Financia.Utils.MensajeUtil;
+import CanalDev.Financia.Utils.SaludoUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -20,7 +22,6 @@ import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.time.LocalTime;
 import java.util.ResourceBundle;
 
 @Component
@@ -55,9 +56,6 @@ public class BalanceController implements Initializable {
     @FXML
     private TableColumn<MovimientoModelo, Void> eliminarColumna;
 
-    @FXML
-    private Button agregarMovimientoBoton;
-
     private final ObservableList<MovimientoModelo> movimientosLista = FXCollections.observableArrayList();
 
     public BalanceController(MovimientoServicio movimientoServicio) {
@@ -73,17 +71,7 @@ public class BalanceController implements Initializable {
     }
 
     private void saludo(){
-        LocalTime hora = LocalTime.now();
-        String saludo;
-        saludoLabel.setText("");
-        if(hora.isBefore(LocalTime.NOON)) {
-            saludo = "Hola, buenos días";
-        } else if (hora.isBefore(LocalTime.of(18,0))){
-            saludo = "Hola, buenas tardes";
-        } else {
-            saludo = "Hola, buenas noches";
-        }
-        saludoLabel.setText(saludo);
+        saludoLabel.setText(SaludoUtil.generarSaludo());
     }
 
     @FXML
@@ -103,7 +91,7 @@ public class BalanceController implements Initializable {
             cargarTabla();
             actualizarBalance();
         } catch (Exception e) {
-            e.printStackTrace();
+            MensajeUtil.mostrarError("Error", "No se puede abrir el formulario para registrar Nuevo Movimiento");
         }
     }
 
@@ -121,7 +109,7 @@ public class BalanceController implements Initializable {
     }
 
     private void configurarColumnaEliminar() {
-        eliminarColumna.setCellFactory(col -> new TableCell<MovimientoModelo, Void>() {
+        eliminarColumna.setCellFactory(col -> new TableCell<>() {
             private final Button btn = crearBotonEliminar(col);
 
             @Override
@@ -156,11 +144,11 @@ public class BalanceController implements Initializable {
                 .getItems()
                 .get(cell.getIndex());
 
-        Integer id = movimiento.getIdMovimiento();
-
-        if (movimientoServicio.eliminarMovimientoPorId(id)) {
-            cell.getTableView().getItems().remove(movimiento);
+        if (movimientoServicio.eliminarMovimiento(movimiento)) {
+            movimientosLista.remove(movimiento);
             actualizarBalance();
+        } else {
+          MensajeUtil.mostrarError("Error", "No se pudo eliminar el movimiento");
         }
     }
 
@@ -171,17 +159,7 @@ public class BalanceController implements Initializable {
     }
 
     private void actualizarBalance() {
-        float total = calcularTotal();
+        float total = movimientoServicio.calcularBalance();
         labelBalance.setText("$ " + total);
-    }
-
-    private float calcularTotal() {
-        float total = 0f;
-
-        for (MovimientoModelo movimiento : movimientosTabla.getItems()) {
-            total += movimiento.getMontoMovimiento();
-        }
-
-        return total;
     }
 }

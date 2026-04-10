@@ -1,55 +1,77 @@
 package CanalDev.Financia.Controlador;
 
 import CanalDev.Financia.Modelo.MovimientoModelo;
-import CanalDev.Financia.Servicio.CategoriaServicio;
-import CanalDev.Financia.Servicio.MovimientoServicio;
+import CanalDev.Financia.Servicio.ICategoriaServicio;
+import CanalDev.Financia.Servicio.IMovimientoServicio;
+import CanalDev.Financia.Utils.FormatoMonedaUtil;
 import CanalDev.Financia.Utils.MensajeUtil;
 import CanalDev.Financia.Utils.AlertUtil;
+import CanalDev.Financia.Utils.ValidacionUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import CanalDev.Financia.Modelo.TipoMovimiento;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Controlador para la ventana de creación de un nuevo movimiento financiero.
+ * Se encarga de coordinar la interacción entre la interfaz gráfica (JavaFX)
+ * y los servicios de negocio (Spring).
+
+ * Responsabilidades:
+ * - Validar campos de entrada.
+ * - Delegar la lógica de negocio a los servicios.
+ * - Mostrar mensajes de éxito o error.
+ * - Cerrar la ventana cuando corresponde.
+ */
+
 @Component
 public class nuevoMovimientoController implements Initializable {
 
+    /** Acumulador de mensajes de validación */
     StringBuilder mensaje = new StringBuilder();
 
-    @Autowired
-    private MovimientoServicio movimientoServicio;
+    /** Campos de la interfaz gráfica (inyectados por FXML) */
+    @FXML private TextField montoTexto;
+    @FXML private ComboBox<TipoMovimiento> tipoCombo;
+    @FXML private ComboBox<String> categoriaCombo;
+    @FXML private DatePicker fechaDate;
+    @FXML private Button botonGuardar;
+    @FXML private Button botonCancelar;
 
-    @FXML
-    private TextField montoTexto;
+    /**  Dependencias de negocio (inyectadas por Spring) */
+    private final ICategoriaServicio categoriaServicio;
+    private final IMovimientoServicio movimientoServicio;
 
-    @FXML
-    private ComboBox<TipoMovimiento> tipoCombo;
+    /**
+     * Constructor con inyección de dependencias.
+     * @param categoriaServicio servicio para obtener categorías según tipo de movimiento
+     * @param movimientoServicio servicio para gestionar movimientos financieros
+     */
+    public nuevoMovimientoController(ICategoriaServicio categoriaServicio, IMovimientoServicio movimientoServicio) {
+        this.categoriaServicio = categoriaServicio;
+        this.movimientoServicio = movimientoServicio;
+    }
 
-    @FXML
-    private ComboBox<String> categoriaCombo;
-
-    @FXML
-    private DatePicker fechaDate;
-
-    @FXML
-    private Button botonGuardar;
-
-    @FXML
-    private Button botonCancelar;
-
-    private final CategoriaServicio categoriaServicio = new CategoriaServicio();
-
+    /**
+     * Inicializa la ventana al cargarse el FXML.
+     * @param url recurso de inicialización
+     * @param rb bundle de recursos
+     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         formatearCampos();
     }
 
+    /**
+     * Acción al presionar el botón Guardar.
+     * Valida los campos, construye el modelo y lo guarda mediante el servicio.
+     */
     @FXML
     private void guardarMovimiento(){
         if(comprobarCampos()){
@@ -57,7 +79,7 @@ public class nuevoMovimientoController implements Initializable {
             obtenerDatos(movimientoModelo);
             MovimientoModelo guardar = movimientoServicio.guardarMovimiento(movimientoModelo);
             if(guardar.getIdMovimiento() != null){
-                MensajeUtil.mostrarInfo("Exito", "Movimiento guardado correctamente");
+                MensajeUtil.mostrarInfo("Éxito", "Movimiento guardado correctamente");
                 ((Stage) botonGuardar.getScene().getWindow()).close();
             } else{
                 MensajeUtil.mostrarError("Error", "No se pudo registrar el movimiento");
@@ -65,6 +87,10 @@ public class nuevoMovimientoController implements Initializable {
         }
     }
 
+    /**
+     * Acción al presionar el botón Cancelar.
+     * Muestra un cuadro de confirmación y cierra la ventana si el usuario acepta.
+     */
     @FXML
     private void cancelarMovimiento(){
         boolean confirmar = AlertUtil.confirmar(
@@ -79,39 +105,38 @@ public class nuevoMovimientoController implements Initializable {
         }
     }
 
+    /**
+     * Obtiene los datos de la interfaz y los asigna al modelo.
+     * @param movimientoModelo modelo de movimiento a llenar
+     */
     private void obtenerDatos(MovimientoModelo movimientoModelo) {
         movimientoModelo.setCategoriaMovimiento(categoriaCombo.getValue());
-        String tipoMovimiento = tipoCombo.getValue().getValor();
-
-        if(tipoMovimiento.equals("Ingreso")){
-            movimientoModelo.setMontoMovimiento(Float.parseFloat(montoTexto.getText()));
-        } else {
-            movimientoModelo.setMontoMovimiento(Float.parseFloat(montoTexto.getText()) * -1);
-        }
-        movimientoModelo.setTipoMovimiento(tipoCombo.getValue().getValor());
         movimientoModelo.setFechaMovimiento(String.valueOf(fechaDate.getValue()));
+
+        // Delegamos el cálculo de monto y tipo al servicio
+        movimientoServicio.prepararMovimiento(
+                movimientoModelo,
+                tipoCombo.getValue().getValor(),
+                montoTexto.getText()
+        );
     }
 
+    /**
+     * Aplica formato tipo moneda a los campos de entrada y llena los combos iniciales.
+     */
     private void formatearCampos(){
-        aplicarFormatoDecimal(montoTexto);
+        FormatoMonedaUtil.aplicarFormatoDecimal(montoTexto);
         llenarCombos();
     }
 
-    public void aplicarFormatoDecimal(TextField textField) {
-        TextFormatter<String> formatter = new TextFormatter<>(change -> {
-            if (change.getControlNewText().matches("\\d*(\\.\\d{0,2})?")) {
-                return change; // aceptar
-            } else {
-                return null;   // rechazar
-            }
-        });
-        textField.setTextFormatter(formatter);
-    }
-
+    /**
+     * Llena los combos de tipo y categoría, y configura el listener
+     * para actualizar categorías según el tipo seleccionado.
+     */
     private void llenarCombos() {
-        // Llenar con enum directamente
+
         tipoCombo.setItems(FXCollections.observableArrayList(TipoMovimiento.values()));
-        // Mostrar texto bonito
+
         tipoCombo.setCellFactory(cb -> new ListCell<>() {
             @Override
             protected void updateItem(TipoMovimiento item, boolean empty) {
@@ -126,7 +151,6 @@ public class nuevoMovimientoController implements Initializable {
                 setText(empty ? null : item.getValor());
             }
         });
-        // Listener
         tipoCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 categoriaCombo.setItems(
@@ -137,30 +161,34 @@ public class nuevoMovimientoController implements Initializable {
                 categoriaCombo.getSelectionModel().selectFirst();
             }
         });
-        // Valor inicial (IMPORTANTE: ahora es el enum, no String)
         tipoCombo.setValue(TipoMovimiento.INGRESO);
     }
 
+    /**
+     * Verifica que los campos obligatorios no estén vacíos o nulos.
+     * @return true si todos los campos son válidos, false en caso contrario
+     */
     private boolean comprobarCampos(){
-        if (tipoCombo.getValue() == null) {
-            mensaje.append("Ocurrio un error al obtener el tipo de movimiento\n");
+        if (ValidacionUtil.objetoNulo(tipoCombo.getValue())) {
+            mensaje.append("Ocurrió un error al obtener el tipo de movimiento\n");
         }
-        if (montoTexto.getText().isEmpty()){
-            mensaje.append("Ingresa la candidad implicada en el movimiento\n");
+        if (ValidacionUtil.campoVacio(montoTexto.getText())) {
+            mensaje.append("Ingresa la cantidad implicada en el movimiento\n");
         }
-        if (categoriaCombo.getValue() == null) {
-            mensaje.append("Ocurrio un error al obtener la categoria\n");
+        if (ValidacionUtil.objetoNulo(categoriaCombo.getValue())) {
+            mensaje.append("Ocurrió un error al obtener la categoría\n");
         }
-        if (fechaDate.getValue() == null){
-            mensaje.append("Selecciona la fecha de movimiento");
+        if (ValidacionUtil.objetoNulo(fechaDate.getValue())) {
+            mensaje.append("Selecciona la fecha de movimiento\n");
         }
-        if (!mensaje.isEmpty()){
-            MensajeUtil.mostrarError("Campos Vacios",mensaje.toString());
+        if (!mensaje.isEmpty()) {
+            MensajeUtil.mostrarError("Campos Vacíos", mensaje.toString());
             mensaje.setLength(0);
             return false;
-        } else{
+        } else {
             mensaje.setLength(0);
             return true;
         }
     }
 }
+

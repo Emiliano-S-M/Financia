@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>CanalDev</groupId>
 	<artifactId>Financia</artifactId>
-	<version>1.0.0</version>
+	<version>${app.version}</version>
 	<name>Financia</name>
 	<description>Herramienta básica para gestionar presupuestos y mantener el equilibrio financiero día a día.</description>
 	<url/>
@@ -39,6 +39,7 @@
 	</scm>
 	<properties>
 		<java.version>23</java.version>
+		<app.version>1.1.0</app.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -146,9 +147,9 @@
 					<name>Financia</name>
 					<input>${project.build.directory}</input>
 					<destination>${project.build.directory}</destination>
-					<mainJar>Financia-1.0.0.jar</mainJar>
+					<mainJar>Financia-${app.version}.jar</mainJar>
 					<type>EXE</type>
-					<appVersion>1.0.0</appVersion>
+					<appVersion>${app.version}</appVersion>
 					<icon>${project.basedir}/src/main/resources/Imagenes/icon.ico</icon>
 					<runtimeImage>${project.basedir}/runtime</runtimeImage>
 					<winConsole>true</winConsole>
@@ -158,5 +159,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
