@@ -15,6 +15,16 @@ import lombok.ToString;
  *
  */
 
+/**
+ * Entidad JPA que representa un movimiento financiero.
+
+ * Responsabilidades:
+ * - Mapear la tabla de movimientos en la base de datos.
+ * - Almacenar información básica: tipo, monto, categoría y fecha.
+
+ * Notas:
+ * - El monto se guarda como positivo para ingresos y negativo para egresos.
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -22,10 +32,10 @@ import lombok.ToString;
 @ToString
 public class MovimientoModelo {
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
-    private Integer idMovimiento;
-    private String tipoMovimiento;
-    private float montoMovimiento;
-    private String categoriaMovimiento;
-    private String fechaMovimiento;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idMovimiento;   // Identificador único del movimiento
+    private String tipoMovimiento;  // Tipo: Ingreso o Egreso
+    private float montoMovimiento;  // Monto del movimiento
+    private String categoriaMovimiento; // Categoría asociada (ej. comida, salario)
+    private String fechaMovimiento; // Fecha del movimiento en formato texto
 }

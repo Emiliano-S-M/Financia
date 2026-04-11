@@ -70,7 +70,7 @@ public class nuevoMovimientoController implements Initializable {
 
     /**
      * Acción al presionar el botón Guardar.
-     * Valida los campos, construye el modelo y lo guarda mediante el servicio.
+     * Válida los campos, construye el modelo y lo guarda mediante el servicio.
      */
     @FXML
     private void guardarMovimiento(){

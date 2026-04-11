@@ -3,7 +3,7 @@ package CanalDev.Financia.Controlador;
 
 import CanalDev.Financia.Modelo.MovimientoModelo;
 import CanalDev.Financia.Presentacion.FinanciaFx;
-import CanalDev.Financia.Servicio.MovimientoServicio;
+import CanalDev.Financia.Servicio.IMovimientoServicio;
 import CanalDev.Financia.Utils.MensajeUtil;
 import CanalDev.Financia.Utils.SaludoUtil;
 import javafx.collections.FXCollections;
@@ -22,46 +22,59 @@ import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
+/**
+ * Controlador para la ventana principal de balance financiero.
+ * Se encarga de coordinar la interacción entre la interfaz gráfica (JavaFX)
+ * y los servicios de negocio (Spring).
+ *
+ * Responsabilidades:
+ * - Mostrar la lista de movimientos en la tabla.
+ * - Calcular y mostrar el balance acumulado.
+ * - Abrir el formulario para registrar nuevos movimientos.
+ * - Permitir la eliminación de movimientos desde la tabla.
+ * - Delegar la lógica de negocio al servicio de movimientos.
+ */
 @Component
 public class BalanceController implements Initializable {
 
-    private final MovimientoServicio movimientoServicio;
+    /** Servicio de movimientos financieros (inyectado por Spring) */
+    private final IMovimientoServicio movimientoServicio;
 
-    @FXML
-    private Label saludoLabel;
+    /** Label para mostrar saludo dinámico */
+    @FXML private Label saludoLabel;
 
-    @FXML
-    private Label labelBalance;
+    /** Label para mostrar el balance acumulado */
+    @FXML private Label labelBalance;
 
-    @FXML
-    private TableView<MovimientoModelo> movimientosTabla;
+    /** Tabla principal de movimientos */
+    @FXML private TableView<MovimientoModelo> movimientosTabla;
 
-    @FXML
-    private TableColumn<MovimientoModelo, Integer> idColumna;
+    /** Columnas de la tabla */
+    @FXML private TableColumn<MovimientoModelo, Integer> idColumna;
+    @FXML private TableColumn<MovimientoModelo, Integer> tipoColumna;
+    @FXML private TableColumn<MovimientoModelo, String> montoColumna;
+    @FXML private TableColumn<MovimientoModelo, String> categoriaColumna;
+    @FXML private TableColumn<MovimientoModelo, String> fechaColumna;
+    @FXML private TableColumn<MovimientoModelo, Void> eliminarColumna;
 
-    @FXML
-    private TableColumn<MovimientoModelo, Integer> tipoColumna;
-
-    @FXML
-    private TableColumn<MovimientoModelo, String> montoColumna;
-
-    @FXML
-    private TableColumn<MovimientoModelo, String> categoriaColumna;
-
-    @FXML
-    private TableColumn<MovimientoModelo, String> fechaColumna;
-
-    @FXML
-    private TableColumn<MovimientoModelo, Void> eliminarColumna;
-
+    /** Lista observable que alimenta la tabla */
     private final ObservableList<MovimientoModelo> movimientosLista = FXCollections.observableArrayList();
 
-    public BalanceController(MovimientoServicio movimientoServicio) {
+    /**
+     * Constructor con inyección de dependencias.
+     * @param movimientoServicio servicio para gestionar movimientos financieros
+     */
+    public BalanceController(IMovimientoServicio movimientoServicio) {
         this.movimientoServicio = movimientoServicio;
     }
 
+    /**
+     * Inicializa la ventana al cargarse el FXML.
+     * Configura saludo, columnas, datos de la tabla y balance inicial.
+     */
     @Override
     public void initialize(URL url, ResourceBundle rb){
         saludo();
@@ -70,10 +83,16 @@ public class BalanceController implements Initializable {
         actualizarBalance();
     }
 
+    /** Genera y muestra un saludo dinámico en la interfaz */
     private void saludo(){
         saludoLabel.setText(SaludoUtil.generarSaludo());
     }
 
+    /**
+     * Acción al presionar el botón "Agregar Movimiento".
+     * Abre un formulario modal para registrar un nuevo movimiento.
+     * Tras cerrarse, actualiza la tabla y el balance.
+     */
     @FXML
     private void agregarMovimiento() {
         try {
@@ -95,11 +114,13 @@ public class BalanceController implements Initializable {
         }
     }
 
+    /** Configura todas las columnas de la tabla */
     private void configurarColumnas(){
         configurarColumnasDatos();
         configurarColumnaEliminar();
     }
 
+    /** Configura las columnas de datos (id, tipo, monto, categoría, fecha) */
     private void configurarColumnasDatos(){
         idColumna.setCellValueFactory(new PropertyValueFactory<>("idMovimiento"));
         tipoColumna.setCellValueFactory(new PropertyValueFactory<>("tipoMovimiento"));
@@ -108,6 +129,7 @@ public class BalanceController implements Initializable {
         fechaColumna.setCellValueFactory(new PropertyValueFactory<>("fechaMovimiento"));
     }
 
+    /** Configura la columna de eliminación con un botón por fila */
     private void configurarColumnaEliminar() {
         eliminarColumna.setCellFactory(col -> new TableCell<>() {
             private final Button btn = crearBotonEliminar(col);
@@ -120,9 +142,14 @@ public class BalanceController implements Initializable {
         });
     }
 
+    /**
+     * Crea el botón de eliminar con ícono de basura.
+     * @param col columna donde se insertará el botón
+     * @return botón configurado
+     */
     private Button crearBotonEliminar(TableColumn<MovimientoModelo, Void> col) {
         ImageView icono = new ImageView(
-                new Image(getClass().getResourceAsStream("/Imagenes/BoteBasura.png"))
+                new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Imagenes/BoteBasura.png")))
         );
         icono.setPreserveRatio(true);
         icono.setFitWidth(16);
@@ -138,6 +165,10 @@ public class BalanceController implements Initializable {
         return btn;
     }
 
+    /**
+     * Maneja la acción de eliminar un movimiento desde la tabla.
+     * @param btn botón que disparó la acción
+     */
     private void manejarEliminar(Button btn) {
         TableCell<?, ?> cell = (TableCell<?, ?>) btn.getParent();
         MovimientoModelo movimiento = (MovimientoModelo) cell.getTableView()
@@ -152,12 +183,14 @@ public class BalanceController implements Initializable {
         }
     }
 
+    /** Carga los movimientos desde el servicio y los muestra en la tabla */
     private void cargarTabla(){
         movimientosLista.clear();
         movimientosLista.addAll(movimientoServicio.listarMovimientos());
         movimientosTabla.setItems(movimientosLista);
     }
 
+    /** Calcula y muestra el balance total en el label correspondiente */
     private void actualizarBalance() {
         float total = movimientoServicio.calcularBalance();
         labelBalance.setText("$ " + total);
