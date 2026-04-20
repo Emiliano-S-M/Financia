@@ -5,6 +5,7 @@ import CanalDev.Financia.Repositorio.MovimientoRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static CanalDev.Financia.Utils.MensajeUtil.mostrarError;
@@ -34,7 +35,16 @@ public class MovimientoServicio implements IMovimientoServicio{
      */
     @Override
     public List<MovimientoModelo> listarMovimientos() {
-        return movimientoRepositorio.findAll();
+        return movimientoRepositorio.findAll().reversed();
+    }
+
+    @Override
+    public List<MovimientoModelo> listarMovimientosMes(Integer meses){
+        // Vista simplificada: solo últimos 6 meses
+        LocalDate inicio = LocalDate.now()
+                .withDayOfMonth(1) // primer día del mes actual
+                .minusMonths(meses - 1);
+        return movimientoRepositorio.findByFechaMovimientoAfterOrderByIdMovimientoDesc(inicio);
     }
 
     /**
@@ -85,8 +95,46 @@ public class MovimientoServicio implements IMovimientoServicio{
      * @return balance acumulado
      */
     @Override
-    public float calcularBalance(){
+    public float calcularBalanceTotal(){
         return movimientoRepositorio.findAll()
+                .stream()
+                .map(MovimientoModelo::getMontoMovimiento)
+                .reduce(0f, Float::sum);
+    }
+
+    @Override
+    public float calcularBalanceMes(int meses) {
+        LocalDate inicio = LocalDate.now()
+                .withDayOfMonth(1) // primer día del mes actual
+                .minusMonths(meses - 1);
+
+        return movimientoRepositorio.findByFechaMovimientoAfterOrderByIdMovimientoDesc(inicio)
+                .stream()
+                .map(MovimientoModelo::getMontoMovimiento)
+                .filter(monto -> monto > 0)
+                .reduce(0f, Float::sum);
+    }
+
+    @Override
+    public float calcularGastosMes(int meses) {
+        LocalDate inicio = LocalDate.now()
+                .withDayOfMonth(1) // primer día del mes actual
+                .minusMonths(meses - 1);
+
+        return movimientoRepositorio.findByFechaMovimientoAfterOrderByIdMovimientoDesc(inicio)
+                .stream()
+                .map(MovimientoModelo::getMontoMovimiento)
+                .filter(monto -> monto < 0)
+                .reduce(0f, Float::sum);
+    }
+
+    @Override
+    public float calcularSaldoMes(int meses) {
+        LocalDate inicio = LocalDate.now()
+                .withDayOfMonth(1) // primer día del mes actual
+                .minusMonths(meses - 1);
+
+        return movimientoRepositorio.findByFechaMovimientoAfterOrderByIdMovimientoDesc(inicio)
                 .stream()
                 .map(MovimientoModelo::getMontoMovimiento)
                 .reduce(0f, Float::sum);

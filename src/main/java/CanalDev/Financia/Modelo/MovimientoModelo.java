@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDate;
+
 /**
  *
  * @author Emiliano
@@ -37,5 +39,5 @@ public class MovimientoModelo {
     private String tipoMovimiento;  // Tipo: Ingreso o Egreso
     private float montoMovimiento;  // Monto del movimiento
     private String categoriaMovimiento; // Categoría asociada (ej. comida, salario)
-    private String fechaMovimiento; // Fecha del movimiento en formato texto
+    private LocalDate fechaMovimiento; // Fecha del movimiento en formato texto
 }

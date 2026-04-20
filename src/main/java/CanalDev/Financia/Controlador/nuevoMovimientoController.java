@@ -111,7 +111,7 @@ public class nuevoMovimientoController implements Initializable {
      */
     private void obtenerDatos(MovimientoModelo movimientoModelo) {
         movimientoModelo.setCategoriaMovimiento(categoriaCombo.getValue());
-        movimientoModelo.setFechaMovimiento(String.valueOf(fechaDate.getValue()));
+        movimientoModelo.setFechaMovimiento(fechaDate.getValue());
 
         // Delegamos el cálculo de monto y tipo al servicio
         movimientoServicio.prepararMovimiento(
@@ -135,7 +135,7 @@ public class nuevoMovimientoController implements Initializable {
      */
     private void llenarCombos() {
 
-        tipoCombo.setItems(FXCollections.observableArrayList(TipoMovimiento.values()));
+        tipoCombo.setItems(FXCollections.observableArrayList(TipoMovimiento.getValoresSinTODO()));
 
         tipoCombo.setCellFactory(cb -> new ListCell<>() {
             @Override

@@ -39,6 +39,21 @@ La aplicación permite registrar movimientos financieros mediante un formulario 
 
 ---
 
+## 🔍 Filtros dinámicos
+
+La aplicación incorpora un sistema de filtros que permite al usuario explorar sus movimientos financieros de manera flexible:
+
+- **Por tipo de movimiento**: ingresos, egresos o todos.
+- **Por categoría**: supermercado, renta, transporte, etc.
+- **Por fecha**: selección combinada de año, mes y día mediante tres ComboBox, con opción de "Todos" para cada nivel.
+    - Ejemplo: ver todos los registros de enero en cualquier año, o todos los días 8 de cada mes en todos los años.
+- **Búsqueda libre**: campo de texto para localizar movimientos por ID, monto, categoría, tipo o fecha.
+
+Estos filtros se pueden combinar entre sí, ofreciendo una vista personalizada y precisa de la información financiera.
+
+
+---
+
 ## 🎯 Objetivo del proyecto
 
 El objetivo de este proyecto es desarrollar una aplicación de escritorio enfocada en la gestión de finanzas personales, permitiendo registrar, visualizar y controlar ingresos y egresos de forma clara y eficiente.
@@ -47,15 +62,6 @@ Además de su funcionalidad, el proyecto busca servir como una base sólida para
 
 ---
 
-## ⚙️ Tecnologías utilizadas
-
-- Java
-- JavaFX
-- Spring
-
-El sistema está construido con tecnologías enfocadas en aplicaciones de escritorio robustas y escalables.
-
----
 
 ## 🏗️ Arquitectura del sistema
 
@@ -80,6 +86,13 @@ Para entender a detalle cómo funciona el sistema, revisa la documentación comp
 - Eliminación de movimientos
 - Cálculo automático del balance total
 - Interfaz intuitiva con formularios
+- 🔍 Filtros dinámicos:
+    - Por tipo de movimiento (Ingreso, Egreso, Todos)
+    - Por categoría asociada
+    - Por fecha con tres niveles (Año, Mes, Día), incluyendo opción "Todos" para cada nivel
+    - Búsqueda libre por ID, monto, categoría, tipo o fecha
+- 🎨 Personalización visual:
+    - Colores dinámicos en la columna de monto según el tipo de movimiento
 
 ---
 
@@ -89,21 +102,28 @@ Durante el desarrollo se tomaron decisiones enfocadas en mantener un equilibrio 
 
 - Se priorizó una implementación funcional en la primera versión, evitando sobreingeniería prematura.
 - Se separaron responsabilidades dentro de los controladores mediante métodos específicos.
-- Se implementaron utilidades reutilizables para mensajes y alertas.
+- Se implementaron utilidades reutilizables para mensajes, alertas y formato de valores.
 - Se optó por representar los egresos como valores negativos para simplificar el cálculo del balance.
+- Se diseñó un sistema de filtros modulares, con lógica encapsulada en utilidades para facilitar su reutilización.
+- Se eligió un enfoque con tres ComboBox (Año, Mes, Día) en lugar de un único `DatePicker`, permitiendo combinaciones más flexibles de búsqueda.
+- Se aplicaron reglas visuales dinámicas (colores en montos según tipo de movimiento) para mejorar la interpretación inmediata de los datos.
 
 ---
 
 ## 📈 Etapa actual del proyecto
 
-**Versión V1.0.0:**
-- Implementación funcional del sistema
-- Registro y visualización de movimientos
-- Cálculo de balance en tiempo real
+**Versión V1.2.0 (Pre-release):**
+- Implementación de nuevos filtros dinámicos (tipo, categoría, búsqueda libre, fecha con Año/Mes/Día)
+- Nuevos componentes en la interfaz (botones de eliminación con ícono, colores dinámicos en montos)
+- Nuevas utilidades en carpeta Utils (FiltroFechaUtil, TablaColorUtil)
+- Modularización de lógica de filtros para reutilización en múltiples controladores
+- Datos de prueba masivos generados para validación de filtros y balance
+- Versión preliminar enfocada en funcionalidad, pendiente de refactorización y optimización
 
-**Versión V1.0.1 (planeada):**
-- Separación de responsabilidades
-- Refactorización de controladores
+**Próxima etapa (planeada):**
+- Refactorización y optimización de la lógica de filtros
+- Mejora en documentación y ejemplos de uso
+- Preparación de una versión estable con código más limpio y modular
 
 ---
 
@@ -180,16 +200,51 @@ Comenta
 app.storage.path=${user.home}/Financia
 spring.datasource.url=jdbc:h2:file:${app.storage.path}/financiaDB;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE
 ```
+---
+
+## 🚀 Ejecución del proyecto
+### 📋 Requisitos
+
+Asegúrate de tener instalado:
+
+- Java 23
+- Maven 3.9 o superior
+
+---
+
+### ▶️ Ejecutar en modo desarrollo
+
+Clona el repositorio:
+
+``` bash
+git clone https://github.com/Emiliano-S-M/Financia.git
+```
+    
+Entra al proyecto:
+
+```bash
+cd Financia
+```
+
+Ejecuta la aplicación:
+```bash
+mvn clean javafx:run
+```
+
+### 📦 Generar ejecutable (.exe)
+
+El proyecto incluye configuración para generar un instalador en Windows: `mvn clean package` Esto generará un ejecutable en:
+`target/`
 
 ## ⚠️ Notas
 
 Si utilizas la opción de carpeta del usuario, el sistema creará automáticamente el directorio `Financia` dentro de tu carpeta personal al iniciar la aplicación.
 
-
-
-
+Se adjunta un archivo a nivel raiz, llamado [GeneradorSql.java](./src/main/java/CanalDev/Financia/GeneradorSql.java), este archivo lo puedes ejecutar de manera
+independiente, generará un INSERT de datos masivos en consola, que puedes usar para llenar tu BD para pruebas en local, solo copia el INSERT y ejecútalo en tu IDE,
+recuerda establecer primero la conexion a tu base de datos antes de tratar de ejcutar tu INSERT.
 
 📄 Ver historial completo: [CHANGELOG.md](CHANGELOG.md)
 
-Si quieres crear el instalador de la aplicacion para poder distribuirla con una version
+Si quieres crear el instalador de la aplicación para poder distribuirla con una version
 embebida de la JVM lee [DEV_NOTES.md](docs/DEV_NOTES.md)

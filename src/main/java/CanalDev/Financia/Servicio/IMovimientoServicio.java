@@ -25,6 +25,12 @@ public interface IMovimientoServicio {
     public List<MovimientoModelo> listarMovimientos();
 
     /**
+     * Obtiene todos los movimientos registrados en los últimos 6 meses.
+     * @return lista de movimientos de los últimos 6 meses
+     */
+    public List<MovimientoModelo> listarMovimientosMes(Integer mes);
+
+    /**
      * Guarda un movimiento en la base de datos.
      * @param movimientoModelo modelo a guardar
      * @return movimiento guardado con su ID asignado
@@ -49,7 +55,25 @@ public interface IMovimientoServicio {
      * Calcula el balance total sumando todos los montos.
      * @return balance acumulado
      */
-    public float calcularBalance();
+    public float calcularBalanceTotal();
+
+    /**
+     * Calcula el balance total de los meses especificados, sumando todos los montos.
+     * @return balance acumulado de los meses especificados
+     */
+    public float calcularBalanceMes(int meses);
+
+    /**
+     * Calcula el balance total de los meses especificados, sumando todos los montos.
+     * @return balance acumulado de los meses especificados
+     */
+    public float calcularGastosMes(int meses);
+
+    /**
+     * Calcula el balance total de los meses especificados, sumando todos los montos.
+     * @return balance acumulado de los meses especificados
+     */
+    public float calcularSaldoMes(int meses);
 
     /**
      * Prepara un movimiento aplicando reglas de negocio:

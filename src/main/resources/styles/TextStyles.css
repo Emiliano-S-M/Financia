@@ -1,0 +1,47 @@
+.font-weight_bold {
+    -fx-font-weight: bold;
+}
+
+.font-weight_italic {
+    -fx-font-weight: italic;
+}
+
+.font-weight_oblique {
+    -fx-font-weight: oblique;
+}
+
+.font-weight_100 {
+    -fx-font-weight: 100;
+}
+
+.font-weight_200 {
+    -fx-font-weight: 200;
+}
+
+.font-weight_300 {
+    -fx-font-weight: 300;
+}
+
+.font-weight_400 {
+    -fx-font-weight: 400;
+}
+
+.font-weight_500 {
+    -fx-font-weight: 500;
+}
+
+.font-weight_600 {
+    -fx-font-weight: 600;
+}
+
+.font-weight_700 {
+    -fx-font-weight: 700;
+}
+
+.font-weight_800 {
+    -fx-font-weight: 800;
+}
+
+.font-weight_900 {
+    -fx-font-weight: 900;
+}

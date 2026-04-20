@@ -2,12 +2,17 @@ package CanalDev.Financia.Controlador;
 
 
 import CanalDev.Financia.Modelo.MovimientoModelo;
+import CanalDev.Financia.Modelo.TipoMovimiento;
 import CanalDev.Financia.Presentacion.FinanciaFx;
+import CanalDev.Financia.Servicio.ICategoriaServicio;
 import CanalDev.Financia.Servicio.IMovimientoServicio;
+import CanalDev.Financia.Utils.FiltroFechaUtil;
 import CanalDev.Financia.Utils.MensajeUtil;
 import CanalDev.Financia.Utils.SaludoUtil;
+import CanalDev.Financia.Utils.TablaColorUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -22,14 +27,15 @@ import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.*;
 
 /**
  * Controlador para la ventana principal de balance financiero.
  * Se encarga de coordinar la interacción entre la interfaz gráfica (JavaFX)
  * y los servicios de negocio (Spring).
- *
  * Responsabilidades:
  * - Mostrar la lista de movimientos en la tabla.
  * - Calcular y mostrar el balance acumulado.
@@ -40,14 +46,35 @@ import java.util.ResourceBundle;
 @Component
 public class BalanceController implements Initializable {
 
-    /** Servicio de movimientos financieros (inyectado por Spring) */
-    private final IMovimientoServicio movimientoServicio;
+    private FilteredList<MovimientoModelo> filteredData;
 
     /** Label para mostrar saludo dinámico */
     @FXML private Label saludoLabel;
 
     /** Label para mostrar el balance acumulado */
-    @FXML private Label labelBalance;
+    @FXML private Label labelBalanceTotal;
+
+    /** Label para mostrar el balance acumulado en el último mes */
+    @FXML private Label labelBalanceMes;
+
+    /** Label para mostrar los gastos acumulados en el último mes */
+    @FXML private Label labelEgresoMes;
+
+    /** Label para mostrar el saldo restante del mes */
+    @FXML private Label labelSaldoMes;
+
+    /** ComboBox para hacer de filtro en la tabla basado en el "tipo" que se quiere filtrar (Ingreso, Egreso) */
+    @FXML private ComboBox<TipoMovimiento> tipoComboFiltro;
+
+    @FXML private ComboBox<String> categoriaComboFiltro;
+
+    @FXML private TextField BuscarTextFieldFiltro;
+
+        @FXML private ComboBox<Integer> diaComboBoxFiltro;
+
+    @FXML private ComboBox<Month> mesComboBoxFiltro;
+
+    @FXML private  ComboBox<String> anioComboBoxFiltro;
 
     /** Tabla principal de movimientos */
     @FXML private TableView<MovimientoModelo> movimientosTabla;
@@ -60,6 +87,10 @@ public class BalanceController implements Initializable {
     @FXML private TableColumn<MovimientoModelo, String> fechaColumna;
     @FXML private TableColumn<MovimientoModelo, Void> eliminarColumna;
 
+    /**  Dependencias de negocio (inyectadas por Spring) */
+    private final ICategoriaServicio categoriaServicio;
+    private final IMovimientoServicio movimientoServicio;
+
     /** Lista observable que alimenta la tabla */
     private final ObservableList<MovimientoModelo> movimientosLista = FXCollections.observableArrayList();
 
@@ -67,8 +98,9 @@ public class BalanceController implements Initializable {
      * Constructor con inyección de dependencias.
      * @param movimientoServicio servicio para gestionar movimientos financieros
      */
-    public BalanceController(IMovimientoServicio movimientoServicio) {
+    public BalanceController(ICategoriaServicio categoriaServicio, IMovimientoServicio movimientoServicio) {
         this.movimientoServicio = movimientoServicio;
+        this.categoriaServicio = categoriaServicio;
     }
 
     /**
@@ -79,6 +111,7 @@ public class BalanceController implements Initializable {
     public void initialize(URL url, ResourceBundle rb){
         saludo();
         configurarColumnas();
+        llenarCombos();
         cargarTabla();
         actualizarBalance();
     }
@@ -127,6 +160,14 @@ public class BalanceController implements Initializable {
         montoColumna.setCellValueFactory(new PropertyValueFactory<>("montoMovimiento"));
         categoriaColumna.setCellValueFactory(new PropertyValueFactory<>("categoriaMovimiento"));
         fechaColumna.setCellValueFactory(new PropertyValueFactory<>("fechaMovimiento"));
+
+        // Definir reglas con colores en hexadecimal
+        Map<String, String> reglas = new HashMap<>();
+        reglas.put("Ingreso", "#22C55E");
+        reglas.put("Egreso", "#FF0000");
+
+        // Aplicar colores a la columna de monto, usando tipoMovimiento como referencia
+        TablaColorUtil.aplicarColores(montoColumna, "tipoMovimiento", reglas);
     }
 
     /** Configura la columna de eliminación con un botón por fila */
@@ -185,14 +226,133 @@ public class BalanceController implements Initializable {
 
     /** Carga los movimientos desde el servicio y los muestra en la tabla */
     private void cargarTabla(){
-        movimientosLista.clear();
         movimientosLista.addAll(movimientoServicio.listarMovimientos());
-        movimientosTabla.setItems(movimientosLista);
+        aplicarFiltros();
     }
 
     /** Calcula y muestra el balance total en el label correspondiente */
     private void actualizarBalance() {
-        float total = movimientoServicio.calcularBalance();
-        labelBalance.setText("$ " + total);
+        float total = movimientoServicio.calcularBalanceTotal();
+        float totalUltimoMes = movimientoServicio.calcularBalanceMes(1 );
+        float totalGastosMes = movimientoServicio.calcularGastosMes(1);
+        float totalSaldoMes = movimientoServicio.calcularSaldoMes(1);
+
+        NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
+
+        labelBalanceTotal.setText(formatoMoneda.format(total));
+        labelBalanceMes.setText(formatoMoneda.format(totalUltimoMes));
+        labelEgresoMes.setText(formatoMoneda.format(totalGastosMes));
+        labelSaldoMes.setText(formatoMoneda.format(totalSaldoMes));
     }
+
+    /**
+     * Llena los combos de tipo y categoría, y configura el listener
+     * para actualizar categorías según el tipo seleccionado.
+     * Aplica los filtros seleccionados en la tabla
+     */
+    private void llenarCombos() {
+
+        tipoComboFiltro.setItems(FXCollections.observableArrayList(TipoMovimiento.values()));
+        FiltroFechaUtil.llenarFiltrosFecha(anioComboBoxFiltro, mesComboBoxFiltro, diaComboBoxFiltro);
+
+
+        tipoComboFiltro.setCellFactory(cb -> new ListCell<>() {
+            @Override
+            protected void updateItem(TipoMovimiento item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getValor());
+            }
+        });
+        tipoComboFiltro.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(TipoMovimiento item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item.getValor());
+            }
+        });
+        tipoComboFiltro.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                categoriaComboFiltro.setItems(
+                        FXCollections.observableArrayList(
+                                categoriaServicio.obtenerCategorias(newVal.getValor())
+                        )
+                );
+                categoriaComboFiltro.getSelectionModel().selectFirst();
+            }
+        });
+        tipoComboFiltro.setValue(TipoMovimiento.TODO);
+
+        filteredData = new FilteredList<>(movimientosLista, p -> true);
+        movimientosTabla.setItems(filteredData);
+
+        tipoComboFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        categoriaComboFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        BuscarTextFieldFiltro.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        anioComboBoxFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        mesComboBoxFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        diaComboBoxFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+
+    }
+
+
+    private void aplicarFiltros() {
+        TipoMovimiento tipoSeleccionado = tipoComboFiltro.getValue();
+        String categoriaSeleccionada = categoriaComboFiltro.getValue();
+        String textoBusqueda = BuscarTextFieldFiltro.getText();
+        String anioSeleccionado = anioComboBoxFiltro.getValue();
+        Month mesSeleccionado = mesComboBoxFiltro.getValue();
+        Integer diaSeleccionado = diaComboBoxFiltro.getValue();
+
+        filteredData.setPredicate(movimiento -> {
+
+            LocalDate fecha = movimiento.getFechaMovimiento();
+
+            // Filtro por tipo
+            if (tipoSeleccionado != null && tipoSeleccionado != TipoMovimiento.TODO) {
+                if (!movimiento.getTipoMovimiento().equalsIgnoreCase(tipoSeleccionado.getValor())) {
+                    return false;
+                }
+            }
+
+            // Filtro por categoría (solo si no es TODO y hay categoría seleccionada)
+            if (tipoSeleccionado != TipoMovimiento.TODO && categoriaSeleccionada != null) {
+                if (!movimiento.getCategoriaMovimiento().equalsIgnoreCase(categoriaSeleccionada)) {
+                    return false;
+                }
+            }
+
+            // Filtro por texto libre (ID, monto, categoría, fecha)
+            if (textoBusqueda != null && !textoBusqueda.isBlank()) {
+                String lower = textoBusqueda.toLowerCase();
+
+                boolean coincide =
+                        String.valueOf(movimiento.getIdMovimiento()).contains(lower) ||
+                                String.valueOf(movimiento.getMontoMovimiento()).contains(lower) ||
+                                movimiento.getCategoriaMovimiento().toLowerCase().contains(lower) ||
+                                movimiento.getTipoMovimiento().toLowerCase().contains(lower) ||
+                                movimiento.getFechaMovimiento().toString().contains(lower);
+
+                if (!coincide) {
+                    return false;
+                }
+            }
+
+            if (anioSeleccionado != null) {
+                if (fecha.getYear() != Integer.parseInt(anioSeleccionado)) return false;
+            }
+
+            if (mesSeleccionado != null) {
+                if (!fecha.getMonth().equals(mesSeleccionado)) return false;
+            }
+
+            if (diaSeleccionado != null) {
+                if (fecha.getDayOfMonth() != diaSeleccionado) return false;
+            }
+
+            // Si pasa todos los filtros, se muestra
+            return true;
+        });
+    }
+
+
 }

@@ -1,5 +1,8 @@
 package CanalDev.Financia.Modelo;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Enumeración que representa los tipos de movimiento financiero.
  *
@@ -12,6 +15,9 @@ package CanalDev.Financia.Modelo;
  * - El valor "Egreso" implica que el monto se guarda como negativo.
  */
 public enum TipoMovimiento {
+
+    /** Todos los tipos de movimientos */
+    TODO("Todo"),
 
     /** Movimiento de tipo ingreso (monto positivo) */
     INGRESO("Ingreso"),
@@ -37,4 +43,12 @@ public enum TipoMovimiento {
     public String getValor() {
         return valor;
     }
+
+    /** Excluye la "categoria" Todo */
+    public static List<TipoMovimiento> getValoresSinTODO() {
+        return Arrays.stream(values())
+                .filter(t -> t != TODO)
+                .toList();
+    }
+
 }
